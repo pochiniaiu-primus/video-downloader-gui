@@ -1,4 +1,12 @@
 import tkinter as tk
+from tkinter import messagebox, filedialog
+import logging
+
+logging.basicConfig(
+    filename="qr_generator.log",
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 
 class GUI:
@@ -26,7 +34,7 @@ class GUI:
 
         self.path_button = tk.Button(
             self.root, text="Select", width=30, font=("Helvetica", 12, "bold"),
-            command="", highlightthickness=0
+            command=self.select_download_directory, highlightthickness=0
         )
         self.canvas.create_window(200, 180, window=self.path_button)
 
@@ -35,3 +43,12 @@ class GUI:
             command="", highlightthickness=0
         )
         self.canvas.create_window(200, 250, window=self.download_button)
+
+    def select_download_directory(self):
+        file_path = filedialog.askdirectory(title="Select Download Directory")
+        if file_path:
+            logging.info(f"Download directory selected: {file_path}")
+            self.path_label.config(text=file_path)
+        else:
+            logging.info("No download directory was selected.")
+            self.path_label.config(text="Select path to download")
