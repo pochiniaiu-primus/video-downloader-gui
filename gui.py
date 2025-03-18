@@ -1,9 +1,12 @@
 import tkinter as tk
 from tkinter import messagebox, filedialog
 import logging
+from pytubefix import YouTube
+from moviepy import *
+from pytube.cli import on_progress
 
 logging.basicConfig(
-    filename="qr_generator.log",
+    filename="video_downloader.log",
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
@@ -40,7 +43,7 @@ class GUI:
 
         self.download_button = tk.Button(
             self.root, text="Download", width=30, font=("Helvetica", 12, "bold"),
-            command="", highlightthickness=0
+            command=self.download, highlightthickness=0
         )
         self.canvas.create_window(200, 250, window=self.download_button)
 
@@ -52,3 +55,40 @@ class GUI:
         else:
             logging.info("No download directory was selected.")
             self.path_label.config(text="Select path to download")
+
+    def download(self):
+        """
+        Download a YouTube video using the provided URL and save it to a user-selected directory.
+        """
+
+        video_url = self.url_entry.get()
+
+        download_directory = self.path_label.cget("text").strip()
+
+        if not video_url:
+            logging.warning("No video link provided.")
+            messagebox.showwarning("Warning", "No video link provided.")
+            return
+
+        if not download_directory or download_directory == "Select path to download":
+            logging.warning("No valid download directory provided.")
+            messagebox.showwarning("Warning", "Please select a valid download directory.")
+            return
+
+        try:
+            logging.info(f"Starting download for video: {video_url} to directory: {download_directory}")
+            yt = YouTube(video_url, on_progress_callback=on_progress)
+            stream = yt.streams.get_highest_resolution()
+
+            video_file = stream.download(output_path=download_directory)
+            logging.info(f"Video downloaded successfully: {video_file}")
+
+            # Verify the downloaded video file by opening it with moviepy.
+            with VideoFileClip(video_file) as video_clip:
+                logging.info("Video file processed successfully.")
+
+            messagebox.showinfo("Success", "Video downloaded and processed successfully.")
+
+        except Exception as e:
+            logging.error(f"Error downloading video: {e}", exc_info=True)
+            messagebox.showerror("Error", f"Error downloading video: {e}")
